@@ -32,7 +32,7 @@ function Home( {data}) {
         data.map(todo => {
         return (
 
-          <a href="https://nextjs.org/docs" className={styles.card}> 
+          <a key={todo.id}  href="https://nextjs.org/docs" className={styles.card}> 
           <h2 className={styles.card}>{todo.id}</h2>
           <p>{todo.title}</p>
           </a> 
