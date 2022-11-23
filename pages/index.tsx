@@ -1,16 +1,18 @@
 import Head from 'next/head'
-import Image from 'next/image'
 import styles from '../styles/Home.module.css'
 
 
-interface ITodoJson {
+interface ToDoElement {
     userId: number,
     id: number,
     title: string,
     completed: boolean
   }
-//@ts-ignore
-function Home( {data}) {
+interface DataJson {
+    data: ToDoElement[]
+}
+
+function Home( {data} :DataJson) {
   return (
     <div className={styles.container}>
       <Head>
@@ -28,23 +30,16 @@ function Home( {data}) {
 
         
         {
-        //@ts-ignore
         data.map(todo => {
         return (
 
           <a key={todo.id}  href="https://nextjs.org/docs" className={styles.card}> 
           <h2 className={styles.card}>{todo.id}</h2>
-          <p>{todo.title}</p>
+          <p>{todo.title.length > 20 ? todo.title.substring(0, 17) + "..." : todo.title }</p>
           </a> 
         
         );
       })}
-
-            
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
 
         </div>
       </main>
