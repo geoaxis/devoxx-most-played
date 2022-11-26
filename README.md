@@ -1,5 +1,3 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
-
 ## Getting Started
 
 First, run the development server:
@@ -9,6 +7,18 @@ npm run dev
 # or
 yarn dev
 ```
+Create a .env.local file and add the following env vars
+
+```
+GOOGLE_API_KEY=ABC
+PLAYLIST=123
+```
+
+Google API key is a key that you need for accessing your Youtube Data APIs.
+Playlist is the id of playlist that you want to fetch data for 
+
+See more details here : https://developers.google.com/youtube/v3
+
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
