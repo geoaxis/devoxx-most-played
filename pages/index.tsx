@@ -1,12 +1,19 @@
 import { google } from 'googleapis'
-import { Collection, Card, View, Heading, Badge, Text } from '@aws-amplify/ui-react'
+import { Collection, Card, View, Heading, Badge, Text, Image } from '@aws-amplify/ui-react'
 import '@aws-amplify/ui-react/styles.css';
 
 
+interface Standard {
+  url: string
+}
+interface Thumbnails {
+  standard: Standard
+}
 interface Snippet {
   title: string,
   description: string,
   publishedAt: string,
+  thumbnails: Thumbnails
 }
 
 interface Statistics {
@@ -15,7 +22,9 @@ interface Statistics {
 interface PlaylistElement {
   id: string
   snippet: Snippet,
-  statistics: Statistics
+  statistics: Statistics,
+
+
 }
 interface DataJson {
   data: PlaylistElement[]
@@ -29,8 +38,8 @@ function Home({ data }: DataJson) {
       type="grid"
 
       templateColumns="1fr 1fr 1fr"
-      templateRows="12rem 12rem 12rem"
-      
+      templateRows="30rem 30rem 30rem"
+
 
     >
       {(item, index) => (
@@ -44,6 +53,17 @@ function Home({ data }: DataJson) {
           <View padding="xs">
             <Heading padding="medium">{item.snippet.title}</Heading>
             <Badge size="small">{item.statistics.viewCount}</Badge>
+            <Image
+              alt="Amplify logo"
+              src={item.snippet.thumbnails.standard.url}
+              objectFit="initial"
+              objectPosition="50% 50%"
+              backgroundColor="initial"
+              height="75%"
+              width="75%"
+              opacity="100%"
+              onClick={() => alert('📸 Say cheese!')}
+            />
 
             <Text
               variation="primary"
@@ -57,7 +77,7 @@ function Home({ data }: DataJson) {
               width="30vw"
               title={item.snippet.description}
             >
-              {item.snippet.description.length > 100 ? item.snippet.description.substring(0,97) + "...":item.snippet.description}
+              {item.snippet.description.length > 100 ? item.snippet.description.substring(0, 97) + "..." : item.snippet.description}
             </Text>
           </View>
         </Card>
@@ -74,28 +94,53 @@ export async function getStaticProps() {
     auth: process.env.GOOGLE_API_KEY
   });
 
-  const items = await youtube.playlistItems.list({
-    "part": [
-      "snippet,contentDetails"
-    ],
-    "maxResults": 100,
-    "playlistId": process.env.PLAYLIST
-  });
+  let firstTime = true;
+  let hasNextToken = false;
+  let next = '';
+  let gloablResult = new Array();
+
+  while (firstTime || hasNextToken) {
+    firstTime = false;
+
+    const items = await youtube.playlistItems.list({
+      "part": [
+        "snippet,contentDetails"
+      ],
+      "maxResults": 50,
+      "pageToken": next,
+      "playlistId": process.env.PLAYLIST
+    });
 
 
-  let ids = items.data.items?.reduce((a, c) => a.concat(c.contentDetails?.videoId), new Array())
+    if (items.data.nextPageToken != null &&
+      (items.data.prevPageToken === undefined || items.data.nextPageToken != items.data.prevPageToken)) {
+      hasNextToken = true;
+      next = items.data.nextPageToken;
+      console.log(items.data.nextPageToken + " ," + items.data.prevPageToken + ":" + next);
+    } else {
+      hasNextToken = false;
+      console.log(items.data.nextPageToken + "-" + items.data.prevPageToken);
+      break;
 
-  const result = await youtube.videos.list({
-    "part": [
-      "snippet,contentDetails,statistics"
-    ],
-    "id": ids
-  });
+    }
 
+    let ids = items.data.items?.reduce((a, c) => a.concat(String(c.contentDetails?.videoId)), new Array<string>())
+    console.log(ids);
 
-  const data = result.data.items;
+    const result = await youtube.videos.list({
+      "part": [
+        "snippet,contentDetails,statistics"
+      ],
+      "id": ids
+    });
+    gloablResult.push(result.data.items);
 
-  result.data.items?.sort((a, b) => Number(b.statistics?.likeCount) - Number(a.statistics?.likeCount) )
+  }
+
+  let data = [].concat.apply([], gloablResult);
+
+  //@ts-ignore
+  data?.sort((a, b) => Number(b.statistics?.likeCount) - Number(a.statistics?.likeCount))
 
   // Pass data to the page via props
   return { props: { data } }
