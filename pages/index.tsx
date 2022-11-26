@@ -77,7 +77,7 @@ function Home({ data }: DataJson) {
                   height="60%"
                   width="60%"
                   opacity="100%"
-                  onClick={() => alert('📸 Say cheese!')}
+                  onClick={() => window.open('https://youtu.be/' + item.id)}
                 />
 
                 <Text
