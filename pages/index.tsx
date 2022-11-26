@@ -1,70 +1,106 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import { google } from 'googleapis'
+import { Collection, Card, View, Heading, Badge, Text } from '@aws-amplify/ui-react'
+import '@aws-amplify/ui-react/styles.css';
 
 
-interface ToDoElement {
-    userId: number,
-    id: number,
-    title: string,
-    completed: boolean
-  }
-interface DataJson {
-    data: ToDoElement[]
+interface Snippet {
+  title: string,
+  description: string,
+  publishedAt: string,
 }
 
-function Home( {data} :DataJson) {
+interface Statistics {
+  viewCount: string,
+}
+interface PlaylistElement {
+  id: string
+  snippet: Snippet,
+  statistics: Statistics
+}
+interface DataJson {
+  data: PlaylistElement[]
+}
+
+function Home({ data }: DataJson) {
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>Devoxx Most Played</title>
-        <meta name="description" content="Most played videos for Devoxx Belgium 2022" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          <a href="https://nextjs.org">Devoxx</a> Most played
-        </h1>
+    <Collection
+      items={data}
+      type="grid"
 
-        <div className={styles.grid}>
+      templateColumns="1fr 1fr 1fr"
+      templateRows="12rem 12rem 12rem"
+      
 
-        
-        {
-        data.map(todo => {
-        return (
-
-          <a key={todo.id}  href="https://nextjs.org/docs" className={styles.card}> 
-          <h2 className={styles.card}>{todo.id}</h2>
-          <p>{todo.title.length > 20 ? todo.title.substring(0, 17) + "..." : todo.title }</p>
-          </a> 
-        
-        );
-      })}
-
-        </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+    >
+      {(item, index) => (
+        <Card
+          key={index}
+          borderRadius="medium"
+          maxWidth="50rem"
+          variation="outlined"
         >
-          Footer
-        </a>
-      </footer>
-    </div>
+
+          <View padding="xs">
+            <Heading padding="medium">{item.snippet.title}</Heading>
+            <Badge size="small">{item.statistics.viewCount}</Badge>
+
+            <Text
+              variation="primary"
+              as="p"
+              color="blue"
+              lineHeight="1.5em"
+              fontWeight={400}
+              fontSize="1em"
+              fontStyle="normal"
+              textDecoration="none"
+              width="30vw"
+              title={item.snippet.description}
+            >
+              {item.snippet.description.length > 100 ? item.snippet.description.substring(0,97) + "...":item.snippet.description}
+            </Text>
+          </View>
+        </Card>
+      )}
+    </Collection>
+
   )
 }
 
-export async function getServerSideProps() {
-    // Fetch data from external API
-    const res = await fetch(`https://jsonplaceholder.typicode.com/todos/`)
-    const data = await res.json()
-  
-    // Pass data to the page via props
-    return { props: { data } }
-  }
+export async function getStaticProps() {
+
+  const youtube = google.youtube({
+    version: 'v3',
+    auth: process.env.GOOGLE_API_KEY
+  });
+
+  const items = await youtube.playlistItems.list({
+    "part": [
+      "snippet,contentDetails"
+    ],
+    "maxResults": 100,
+    "playlistId": process.env.PLAYLIST
+  });
+
+
+  let ids = items.data.items?.reduce((a, c) => a.concat(c.contentDetails?.videoId), new Array())
+
+  const result = await youtube.videos.list({
+    "part": [
+      "snippet,contentDetails,statistics"
+    ],
+    "id": ids
+  });
+
+
+  const data = result.data.items;
+
+  result.data.items?.sort((a, b) => Number(b.statistics?.likeCount) - Number(a.statistics?.likeCount) )
+
+  // Pass data to the page via props
+  return { props: { data } }
+}
+
 
 export default Home
 
