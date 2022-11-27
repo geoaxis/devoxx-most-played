@@ -14,24 +14,26 @@ interface Snippet {
   videoId: string,
   description: string,
   publishedAt: string,
-  thumbnails: Thumbnails
+  thumbnails: Thumbnails,
 }
 
 interface Statistics {
   viewCount: string,
 }
 interface PlaylistElement {
-  id: string
+  id: string,
   snippet: Snippet,
   statistics: Statistics,
 
 
 }
 interface DataJson {
-  data: PlaylistElement[]
+  data: PlaylistElement[],
+  lastUpdated: string,
 }
 
-function Home({ data }: DataJson) {
+function Home(param:DataJson  ) {
+  console.log(param.lastUpdated);
   return (
 
     <>
@@ -41,8 +43,9 @@ function Home({ data }: DataJson) {
       >
         Devoxx 2022 Most Played talks
       </Heading>
+      <p>Last Updated : {param.lastUpdated}</p>
       <Collection
-        items={data}
+        items={param.data}
         type="grid"
 
         templateColumns="1fr 1fr"
@@ -155,13 +158,15 @@ export async function getStaticProps() {
     });
   }
 
-
-  //@ts-ignore
   const data = Array.from(data2.values()).sort((a, b) => Number(b.statistics?.viewCount) - Number(a.statistics?.viewCount))
+ 
 
+  const lastUpdated = new Date().toLocaleString('sv-SE', {
+    timeZone: 'Europe/Berlin',
+  })
 
   // Pass data to the page via props
-  return { props: { data } }
+  return { props: { data, lastUpdated} }
 }
 
 
