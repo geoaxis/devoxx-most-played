@@ -166,7 +166,9 @@ export async function getStaticProps() {
   })
 
   // Pass data to the page via props
-  return { props: { data, lastUpdated} }
+  return { props: { data, lastUpdated}, 
+  revalidate: 3600 // revalidate every hour  
+ }
 }
 
 
