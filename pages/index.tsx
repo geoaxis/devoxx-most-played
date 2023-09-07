@@ -41,7 +41,7 @@ function Home(param:DataJson  ) {
         width='100vw'
         level={1}
       >
-        Devoxx 2022 Most Played talks
+        ${process.env.CONFERENCE_NAME || 'Devoxx 2022'} Most Played talks
       </Heading>
       <p>Last Updated : {param.lastUpdated}</p>
       <Collection
